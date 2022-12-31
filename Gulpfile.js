@@ -35,7 +35,7 @@ const headerComment = ["/*",
 
 const headerMiniComment = "/*! <%= pkg.name %> v<%= pkg.version %> | <%= fileName(file) %> | <%= pkg.description %> | MIT License | By: <%= pkg.author %> | <%= pkg.homepage %> | <%=pkg.today('Y-m-d') %> */\r\n";
 
-const scssTask = function (fileName, path) {
+const scssTask = async function (fileName, path) {
 
     path = path || "scss/";
 
@@ -64,19 +64,19 @@ const scssTask = function (fileName, path) {
         .pipe(notify({message: fileName + ".scss task completed!"}));
 };
 
-gulp.task("scss", function() {
+gulp.task("scss", async function() {
 	return scssTask("editormd");
 });
 
-gulp.task("scss2", function() {
+gulp.task("scss2", async function() {
 	return scssTask("editormd.preview");
 });
 
-gulp.task("scss3", function() {
+gulp.task("scss3", async function() {
 	return scssTask("editormd.logo");
 });
 
-gulp.task("js", function() {
+gulp.task("js", async function() {
   return gulp.src("./src/editormd.js")
             .pipe(jshint("./.jshintrc"))
             .pipe(jshint.reporter("default"))
@@ -96,9 +96,9 @@ gulp.task("js", function() {
             .pipe(notify({ message: "editormd.js task complete" }));
 });
 
-gulp.task("amd", function() {
+gulp.task("amd", async function() {
     const replaceText1 = [
-        "ar cmModePath  = \"codemirror/mode/\";",
+        "var cmModePath  = \"codemirror/mode/\";",
         "            var cmAddonPath = \"codemirror/addon/\";",
         "",
         "           var codeMirrorModules = [",
@@ -264,7 +264,7 @@ const codeMirror = {
     ]
 };
 
-gulp.task("cm-mode", function() { 
+gulp.task("cm-mode", async function() {
     
     var modes = [
         codeMirror.path.src.mode + "/meta.js"
@@ -288,7 +288,7 @@ gulp.task("cm-mode", function() {
                 .pipe(notify({ message: "codemirror-mode task complete!" }));
 }); 
 
-gulp.task("cm-addon", function() { 
+gulp.task("cm-addon", async function() {
     
     var addons = [];
     
@@ -328,14 +328,14 @@ gulp.task("jsdoc2md", function() {
             .pipe(gulp.dest("docs/markdown"));
 });
 */
-gulp.task("watch", function() {
+gulp.task("watch",async function() {
 	gulp.watch("scss/editormd.scss", ["scss"]);
 	gulp.watch("scss/editormd.preview.scss", ["scss", "scss2"]);
 	gulp.watch("scss/editormd.logo.scss", ["scss", "scss3"]);
 	gulp.watch("src/editormd.js", ["js", "amd"]);
 });
 
-exports.default = gulp.series(
+gulp.task("default",async ()=> gulp.series(
     "scss",
     "scss2",
     "scss3",
@@ -343,4 +343,4 @@ exports.default = gulp.series(
     "amd",
     "cm-addon",
     "cm-mode"
-);
+));
