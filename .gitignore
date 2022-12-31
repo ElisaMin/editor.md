@@ -16,3 +16,6 @@ css/*.map
 .idea
 yarn.lock
 pnpm-lock.yaml
+package-lock.json
+*.min.js
+editormd.*js
