@@ -34,169 +34,84 @@ const headerComment = ["/*",
     "\r\n"].join("\r\n");
 
 const headerMiniComment = "/*! <%= pkg.name %> v<%= pkg.version %> | <%= fileName(file) %> | <%= pkg.description %> | MIT License | By: <%= pkg.author %> | <%= pkg.homepage %> | <%=pkg.today('Y-m-d') %> */\r\n";
+const replaceText1 = [
+    "var cmModePath  = \"codemirror/mode/\";",
+    "            var cmAddonPath = \"codemirror/addon/\";",
+    "",
+    "           var codeMirrorModules = [",
+    "                \"jquery\", \"marked\", \"prettify\",",
+    "                \"katex\", \"raphael\", \"underscore\", \"flowchart\",  \"jqueryflowchart\",  \"sequenceDiagram\",",
+    "",
+    "                \"codemirror/lib/codemirror\",",
+    "                cmModePath + \"css/css\",",
+    "                cmModePath + \"sass/sass\",",
+    "                cmModePath + \"shell/shell\",",
+    "                cmModePath + \"sql/sql\",",
+    "                cmModePath + \"clike/clike\",",
+    "                cmModePath + \"php/php\",",
+    "                cmModePath + \"xml/xml\",",
+    "                cmModePath + \"markdown/markdown\",",
+    "                cmModePath + \"javascript/javascript\",",
+    "                cmModePath + \"htmlmixed/htmlmixed\",",
+    "                cmModePath + \"gfm/gfm\",",
+    "                cmModePath + \"http/http\",",
+    "                cmModePath + \"go/go\",",
+    "                cmModePath + \"dart/dart\",",
+    "                cmModePath + \"coffeescript/coffeescript\",",
+    "                cmModePath + \"nginx/nginx\",",
+    "                cmModePath + \"python/python\",",
+    "                cmModePath + \"perl/perl\",",
+    "                cmModePath + \"lua/lua\",",
+    "                cmModePath + \"r/r\", ",
+    "                cmModePath + \"ruby/ruby\", ",
+    "                cmModePath + \"rst/rst\",",
+    "                cmModePath + \"smartymixed/smartymixed\",",
+    "                cmModePath + \"vb/vb\",",
+    "                cmModePath + \"vbscript/vbscript\",",
+    "                cmModePath + \"velocity/velocity\",",
+    "                cmModePath + \"xquery/xquery\",",
+    "                cmModePath + \"yaml/yaml\",",
+    "                cmModePath + \"erlang/erlang\",",
+    "                cmModePath + \"jade/jade\",",
+    "",
+    "                cmAddonPath + \"edit/trailingspace\", ",
+    "                cmAddonPath + \"dialog/dialog\", ",
+    "                cmAddonPath + \"search/searchcursor\", ",
+    "                cmAddonPath + \"search/search\", ",
+    "                cmAddonPath + \"scroll/annotatescrollbar\", ",
+    "                cmAddonPath + \"search/matchesonscrollbar\", ",
+    "                cmAddonPath + \"display/placeholder\", ",
+    "                cmAddonPath + \"edit/closetag\", ",
+    "                cmAddonPath + \"fold/foldcode\",",
+    "                cmAddonPath + \"fold/foldgutter\",",
+    "                cmAddonPath + \"fold/indent-fold\",",
+    "                cmAddonPath + \"fold/brace-fold\",",
+    "                cmAddonPath + \"fold/xml-fold\", ",
+    "                cmAddonPath + \"fold/markdown-fold\",",
+    "                cmAddonPath + \"fold/comment-fold\", ",
+    "                cmAddonPath + \"mode/overlay\", ",
+    "                cmAddonPath + \"selection/active-line\", ",
+    "                cmAddonPath + \"edit/closebrackets\", ",
+    "                cmAddonPath + \"display/fullscreen\",",
+    "                cmAddonPath + \"search/match-highlighter\"",
+    "           ];",
+    "",
+    "            define(codeMirrorModules, factory);"
+].join("\r\n");
 
-const scssTask = async function (fileName, path) {
+const replaceText2 = [
+    "if (typeof define == \"function\" && define.amd) {",
+    "       $          = arguments[0];",
+    "       marked     = arguments[1];",
+    "       prettify   = arguments[2];",
+    "       katex      = arguments[3];",
+    "       Raphael    = arguments[4];",
+    "       _          = arguments[5];",
+    "       flowchart  = arguments[6];",
+    "       CodeMirror = arguments[9];",
+    "   }"
+].join("\r\n");
 
-    path = path || "scss/";
-
-    let distPath = "css";
-
-    return sass(path + fileName + ".scss", {style: "expanded", sourcemap: false, noCache: true})
-        .pipe(gulp.dest(distPath))
-        .pipe(header(headerComment, {
-            pkg: pkg, fileName: function (file) {
-                var name = file.path.split(file.base);
-                return name[1].replace("\\", "");
-            }
-        }))
-        .pipe(gulp.dest(distPath))
-        .pipe(rename({suffix: ".min"}))
-        .pipe(gulp.dest(distPath))
-        .pipe(minifycss())
-        .pipe(gulp.dest(distPath))
-        .pipe(header(headerMiniComment, {
-            pkg: pkg, fileName: function (file) {
-                var name = file.path.split(file.base);
-                return name[1].replace("\\", "");
-            }
-        }))
-        .pipe(gulp.dest(distPath))
-        .pipe(notify({message: fileName + ".scss task completed!"}));
-};
-
-gulp.task("scss", async function() {
-	return scssTask("editormd");
-});
-
-gulp.task("scss2", async function() {
-	return scssTask("editormd.preview");
-});
-
-gulp.task("scss3", async function() {
-	return scssTask("editormd.logo");
-});
-
-gulp.task("js", async function() {
-  return gulp.src("./src/editormd.js")
-            .pipe(jshint("./.jshintrc"))
-            .pipe(jshint.reporter("default"))
-            .pipe(header(headerComment, {pkg : pkg, fileName : function(file) {
-                var name = file.path.split(file.base);
-                return name[1].replace(/[\\\/]?/, "");
-            }}))
-            .pipe(gulp.dest("./"))
-            .pipe(rename({ suffix: ".min" }))
-            .pipe(uglify())  // {outSourceMap: true, sourceRoot: "./"}
-            .pipe(gulp.dest("./"))
-            .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
-                var name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
-                return name[1].replace(/[\\\/]?/, "");
-            }}))
-            .pipe(gulp.dest("./"))
-            .pipe(notify({ message: "editormd.js task complete" }));
-});
-
-gulp.task("amd", async function() {
-    const replaceText1 = [
-        "var cmModePath  = \"codemirror/mode/\";",
-        "            var cmAddonPath = \"codemirror/addon/\";",
-        "",
-        "           var codeMirrorModules = [",
-        "                \"jquery\", \"marked\", \"prettify\",",
-        "                \"katex\", \"raphael\", \"underscore\", \"flowchart\",  \"jqueryflowchart\",  \"sequenceDiagram\",",
-        "",
-        "                \"codemirror/lib/codemirror\",",
-        "                cmModePath + \"css/css\",",
-        "                cmModePath + \"sass/sass\",",
-        "                cmModePath + \"shell/shell\",",
-        "                cmModePath + \"sql/sql\",",
-        "                cmModePath + \"clike/clike\",",
-        "                cmModePath + \"php/php\",",
-        "                cmModePath + \"xml/xml\",",
-        "                cmModePath + \"markdown/markdown\",",
-        "                cmModePath + \"javascript/javascript\",",
-        "                cmModePath + \"htmlmixed/htmlmixed\",",
-        "                cmModePath + \"gfm/gfm\",",
-        "                cmModePath + \"http/http\",",
-        "                cmModePath + \"go/go\",",
-        "                cmModePath + \"dart/dart\",",
-        "                cmModePath + \"coffeescript/coffeescript\",",
-        "                cmModePath + \"nginx/nginx\",",
-        "                cmModePath + \"python/python\",",
-        "                cmModePath + \"perl/perl\",",
-        "                cmModePath + \"lua/lua\",",
-        "                cmModePath + \"r/r\", ",
-        "                cmModePath + \"ruby/ruby\", ",
-        "                cmModePath + \"rst/rst\",",
-        "                cmModePath + \"smartymixed/smartymixed\",",
-        "                cmModePath + \"vb/vb\",",
-        "                cmModePath + \"vbscript/vbscript\",",
-        "                cmModePath + \"velocity/velocity\",",
-        "                cmModePath + \"xquery/xquery\",",
-        "                cmModePath + \"yaml/yaml\",",
-        "                cmModePath + \"erlang/erlang\",",
-        "                cmModePath + \"jade/jade\",",
-        "",
-        "                cmAddonPath + \"edit/trailingspace\", ",
-        "                cmAddonPath + \"dialog/dialog\", ",
-        "                cmAddonPath + \"search/searchcursor\", ",
-        "                cmAddonPath + \"search/search\", ",
-        "                cmAddonPath + \"scroll/annotatescrollbar\", ",
-        "                cmAddonPath + \"search/matchesonscrollbar\", ",
-        "                cmAddonPath + \"display/placeholder\", ",
-        "                cmAddonPath + \"edit/closetag\", ",
-        "                cmAddonPath + \"fold/foldcode\",",
-        "                cmAddonPath + \"fold/foldgutter\",",
-        "                cmAddonPath + \"fold/indent-fold\",",
-        "                cmAddonPath + \"fold/brace-fold\",",
-        "                cmAddonPath + \"fold/xml-fold\", ",
-        "                cmAddonPath + \"fold/markdown-fold\",",
-        "                cmAddonPath + \"fold/comment-fold\", ",
-        "                cmAddonPath + \"mode/overlay\", ",
-        "                cmAddonPath + \"selection/active-line\", ",
-        "                cmAddonPath + \"edit/closebrackets\", ",
-        "                cmAddonPath + \"display/fullscreen\",",
-        "                cmAddonPath + \"search/match-highlighter\"",
-        "           ];",
-        "",
-        "            define(codeMirrorModules, factory);"
-    ].join("\r\n");
-
-    const replaceText2 = [
-        "if (typeof define == \"function\" && define.amd) {",
-        "       $          = arguments[0];",
-        "       marked     = arguments[1];",
-        "       prettify   = arguments[2];",
-        "       katex      = arguments[3];",
-        "       Raphael    = arguments[4];",
-        "       _          = arguments[5];",
-        "       flowchart  = arguments[6];",
-        "       CodeMirror = arguments[9];",
-        "   }"
-    ].join("\r\n");
-
-    gulp.src("src/editormd.js")
-        .pipe(rename({ suffix: ".amd" }))
-        .pipe(gulp.dest("./"))
-        .pipe(header(headerComment, {pkg : pkg, fileName : function(file) {
-            var name = file.path.split(file.base);
-            return name[1].replace(/[\\\/]?/, "");
-        }}))
-        .pipe(gulp.dest("./"))
-        .pipe(replace("/* Require.js define replace */", replaceText1))
-        .pipe(gulp.dest("./"))
-        .pipe(replace("/* Require.js assignment replace */", replaceText2))
-        .pipe(gulp.dest("./"))
-        .pipe(rename({ suffix: ".min" }))
-        .pipe(uglify()) //{outSourceMap: true, sourceRoot: "./"}
-        .pipe(gulp.dest("./"))
-        .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
-            var name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
-            return name[1].replace(/[\\\/]?/, "");
-        }}))
-        .pipe(gulp.dest("./"))
-        .pipe(notify({ message: "amd version task complete"}));
-});
 
 
 const codeMirror = {
@@ -263,8 +178,89 @@ const codeMirror = {
         "search/match-highlighter"
     ]
 };
+async function scssTask(fileName, path) {
 
-gulp.task("cm-mode", async function() {
+    path = path || "scss/";
+
+    let distPath = "css";
+
+    return sass(path + fileName + ".scss", {style: "expanded", sourcemap: false, noCache: true})
+        .pipe(gulp.dest(distPath))
+        .pipe(header(headerComment, {
+            pkg: pkg, fileName: function (file) {
+                var name = file.path.split(file.base);
+                return name[1].replace("\\", "");
+            }
+        }))
+        .pipe(gulp.dest(distPath))
+        .pipe(rename({suffix: ".min"}))
+        .pipe(gulp.dest(distPath))
+        .pipe(minifycss())
+        .pipe(gulp.dest(distPath))
+        .pipe(header(headerMiniComment, {
+            pkg: pkg, fileName: function (file) {
+                var name = file.path.split(file.base);
+                return name[1].replace("\\", "");
+            }
+        }))
+        .pipe(gulp.dest(distPath))
+        .pipe(notify({message: fileName + ".scss task completed!"}));
+}
+async function scss1() {
+    return scssTask("editormd");
+}
+async function scss2() {
+    return scssTask("editormd.preview");
+}
+async function scss3() {
+	return scssTask("editormd.logo");
+}
+async function js() {
+    gulp.src("./src/editormd.js")
+        .pipe(jshint("./.jshintrc"))
+        .pipe(jshint.reporter("default"))
+        .pipe(header(headerComment, {pkg : pkg, fileName : function(file) {
+                var name = file.path.split(file.base);
+                return name[1].replace(/[\\\/]?/, "");
+            }}))
+        .pipe(gulp.dest("./"))
+        .pipe(rename({ suffix: ".min" }))
+        .pipe(uglify())  // {outSourceMap: true, sourceRoot: "./"}
+        .pipe(gulp.dest("./"))
+        .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
+                var name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
+                return name[1].replace(/[\\\/]?/, "");
+            }}))
+        .pipe(gulp.dest("./"))
+        .pipe(notify({ message: "editormd.js task complete" }));
+}
+
+async function amd() {
+    gulp.src("src/editormd.js")
+        .pipe(rename({ suffix: ".amd" }))
+        .pipe(gulp.dest("./"))
+        .pipe(header(headerComment, {pkg : pkg, fileName : function(file) {
+                let name = file.path.split(file.base);
+                return name[1].replace(/[\\\/]?/, "");
+            }}))
+        .pipe(gulp.dest("./"))
+        .pipe(replace("/* Require.js define replace */", replaceText1))
+        .pipe(gulp.dest("./"))
+        .pipe(replace("/* Require.js assignment replace */", replaceText2))
+        .pipe(gulp.dest("./"))
+        .pipe(rename({ suffix: ".min" }))
+        .pipe(uglify()) //{outSourceMap: true, sourceRoot: "./"}
+        .pipe(gulp.dest("./"))
+        .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
+                var name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
+                return name[1].replace(/[\\\/]?/, "");
+            }}))
+        .pipe(gulp.dest("./"))
+        .pipe(notify({ message: "amd version task complete"}));
+
+}
+
+async function cmMode() {
     
     var modes = [
         codeMirror.path.src.mode + "/meta.js"
@@ -286,9 +282,9 @@ gulp.task("cm-mode", async function() {
                 }}))
                 .pipe(gulp.dest(codeMirror.path.dist))
                 .pipe(notify({ message: "codemirror-mode task complete!" }));
-}); 
+}
 
-gulp.task("cm-addon", async function() {
+async function cmAddon() {
     
     var addons = [];
     
@@ -308,7 +304,33 @@ gulp.task("cm-addon", async function() {
                 }}))
                 .pipe(gulp.dest(codeMirror.path.dist))
                 .pipe(notify({ message: "codemirror-addon.js task complete" }));
-}); 
+}
+async function watch(){
+    gulp.parallel(
+        gulp.watch("scss/editormd.scss", scss1),
+        gulp.watch("scss/editormd.preview.scss", gulp.series(scss2,scss3)),
+        gulp.watch("scss/editormd.logo.scss", gulp.series(scss1,scss3)),
+        gulp.watch("src/editormd.js", gulp.series(js,amd))
+    );
+}
+exports.js = js;
+exports.amd = amd;
+exports.cm = gulp.series(
+    cmAddon,
+    cmMode
+);
+exports.watch = watch;
+exports.scssBuild=gulp.series(
+    scss1,
+    scss2,
+    scss3
+);
+exports.default = gulp.parallel(
+    exports.js,
+    exports.scssBuild,
+    exports.amd,
+    exports.cm,
+);
 /*
 gulp.task("jsdoc", function(){
     return gulp.src(["./src/editormd.js", "README.md"])
@@ -328,19 +350,3 @@ gulp.task("jsdoc2md", function() {
             .pipe(gulp.dest("docs/markdown"));
 });
 */
-gulp.task("watch",async function() {
-	gulp.watch("scss/editormd.scss", ["scss"]);
-	gulp.watch("scss/editormd.preview.scss", ["scss", "scss2"]);
-	gulp.watch("scss/editormd.logo.scss", ["scss", "scss3"]);
-	gulp.watch("src/editormd.js", ["js", "amd"]);
-});
-
-gulp.task("default",async ()=> gulp.series(
-    "scss",
-    "scss2",
-    "scss3",
-    "js",
-    "amd",
-    "cm-addon",
-    "cm-mode"
-));
