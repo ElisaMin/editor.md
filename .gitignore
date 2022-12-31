@@ -13,3 +13,6 @@ examples/uploads/**/*
 .project
 .url
 css/*.map
+.idea
+yarn.lock
+pnpm-lock.yaml
