@@ -1,3 +1,4 @@
+/* jshint browser: true */
 ;(function(factory) {
     "use strict";
     
