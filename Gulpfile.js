@@ -2,14 +2,13 @@
 
 const { series,parallel,src,dest,watch } = require("gulp");
 const os = require("os");
-const {pipeline} = require("readable-stream");
 // const gutil = require("gulp-util");
 const sass = require("gulp-sass")(require("sass"));
 const jshint = require("gulp-jshint");
 const uglify = require("gulp-uglify");
 const rename = require("gulp-rename");
 const concat = require("gulp-concat");
-const notify = console.log;
+const notify = require("gulp-notify");
 const header = require("gulp-header");
 const minifycss = require("gulp-clean-css");
 //var jsdoc        = require("gulp-jsdoc");
@@ -17,7 +16,6 @@ const minifycss = require("gulp-clean-css");
 const pkg = require("./package.json");
 const dateFormat = require("dateformatter").format;
 const replace = require("gulp-replace");
-
 pkg.name         = "Editor.md";
 pkg.today        = dateFormat;
 
@@ -36,6 +34,7 @@ const headerComment = [
     "\r\n"].join("\r\n");
 
 const headerMiniComment = "/*! <%= pkg.name %> v<%= pkg.version %> | <%= fileName(file) %> | <%= pkg.description %> | MIT License | By: <%= pkg.author %> | <%= pkg.homepage %> | <%=pkg.today('Y-m-d') %> */\r\n";
+
 const replaceText1 = [
     "let cmModePath  = \"codemirror/mode/\";",
     "            let cmAddonPath = \"codemirror/addon/\";",
@@ -114,8 +113,6 @@ const replaceText2 = [
     "   }"
 ].join("\r\n");
 
-
-
 const codeMirror = {
     path: {
         src: {
@@ -191,119 +188,107 @@ const codeMirror = {
         "search/match-highlighter"
     ]
 };
+
+let head = (b) => {
+    return {
+        pkg : pkg, fileName : (file)=> file
+            .path
+            .split(file.base)[1]
+            .replace(b ? "\\" : /[\\\/]?/ , "")
+    };
+};
 async function scssTask(fileName, pathOrNull) {
     let path = pathOrNull || "scss/";
     let distPath = "css";
-    return pipeline([
-        sass({
-            file:path+fileName+".sass",
-            outputStyle:"expanded",
-            sourceMap:false,
-            noCache: true,
-        }),
-        dest(distPath),
-        header(headerComment, {
-            pkg: pkg, fileName: function (file) {
-                let name = file.path.split(file.base);
-                return name[1].replace("\\", "");
-            }
-        }),
-        dest(distPath),
-        rename({suffix: ".min"}),
-        dest(distPath),
-        minifycss(),
-        dest(distPath),
-        header(headerMiniComment, {
-            pkg: pkg, fileName: function (file) {
-                let name = file.path.split(file.base);
-                return name[1].replace("\\", "");
-            }
-        }),
-        dest(distPath),
-    ],(err)=> notify({message: err || fileName + ".scss task completed!"}),);
+    return sass({
+        file:path+fileName+".sass",
+        outputStyle:"expanded",
+        sourceMap:false,
+        noCache: true,
+    })
+    .pipe(dest(distPath))
+    .pipe(header(headerComment, head(true)))
+    .pipe(dest(distPath))
+    .pipe(rename({ suffix: ".min" }))
+    .pipe(dest(distPath))
+    .pipe(minifycss())
+    .pipe(dest(distPath))
+    .pipe(header(headerMiniComment, head(true)))
+    .pipe(dest(distPath))
+    .pipe(notify({ message: fileName + ".scss task completed!" }));
 }
-let scssMain = async ()=> scssTask("editormd");
-let scssPreview = async ()=>scssTask("editormd.preview");
-let scssLogo = async ()=> scssTask("editormd.logo");
+let scssMain = async ()=> await scssTask("editormd");
+let scssPreview = async ()=> await scssTask("editormd.preview");
+let scssLogo = async ()=> await scssTask("editormd.logo");
 
 let scssJob = series(
     scssMain,
     scssPreview,
     scssLogo
 );
-let js = async ()=> pipeline([
-    src("./src/editormd.js"),
-    jshint("./.jshintrc"),
-    jshint.reporter(),
-    header(headerComment, {pkg : pkg, fileName : function(file) {
-            let name = file.path.split(file.base);
-            return name[1].replace(/[\\\/]?/, "");
-        }}),
-    dest("./"),
-    rename({ suffix: ".min" }),
-    uglify(),  // {outSourceMap: true, sourceRoot: "./"}
-    dest("./"),
-
-    header(headerMiniComment, {pkg : pkg, fileName : function(file) {
+let js = async ()=> src("./src/editormd.js")
+    .pipe(dest("./"))
+    .pipe(header("/* jshint browser: true */ \n\r"))
+    .pipe(jshint("./.jshintrc"))
+    .pipe(jshint.reporter())
+    .pipe(header(headerComment, head()))
+    .pipe(dest("./"))
+    .pipe(rename({ suffix: ".min" }))
+    .pipe(uglify())  // {outSourceMap: true, sourceRoot: "./"}
+    .pipe(dest("./"))
+    .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
             let name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
             return name[1].replace(/[\\\/]?/, "");
-        }}),
-    dest("./"),
-],(err)=> notify({message: err || "editormd.js task complete" }));
+        }}))
+    .pipe(dest("./"))
+    .pipe(notify({ message: "editormd.js task complete" }));
+
+let amd = async ()=> src("src/editormd.js")
+    .pipe(rename({ suffix: ".amd" }))
+    .pipe(dest("./"))
+    .pipe(header(headerComment, head()))
+    .pipe(dest("./"))
+    .pipe(replace("/* Require.js define replace */", replaceText1))
+    .pipe(dest("./"))
+    .pipe(replace("/* Require.js assignment replace */", replaceText2))
+    .pipe(dest("./"))
+    .pipe(rename({ suffix: ".min" }))
+    .pipe(uglify()) //{outSourceMap: true, sourceRoot: "./"}
+    .pipe(dest("./"))
+    .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
+        let name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
+        return name[1].replace(/[\\\/]?/, "");
+    }}))
+    .pipe(dest("./"))
+    .pipe(notify({ message: "amd version task complete"}));
 
 
-let amd = async ()=> pipeline([
-    src("src/editormd.js"),
-    rename({ suffix: ".amd" }),
-    dest("./"),
-    header(headerComment, {pkg : pkg, fileName : function(file) {
-            let name = file.path.split(file.base);
-            return name[1].replace(/[\\\/]?/, "");
-        }}),
-    dest("./"),
-    replace("/* Require.js define replace */", replaceText1),
-    dest("./"),
-    replace("/* Require.js assignment replace */", replaceText2),
-    dest("./"),
-    rename({ suffix: ".min" }),
-    uglify, //{outSourceMap: true, sourceRoot: "./"}
-    dest("./"),
-    header(headerMiniComment, {pkg : pkg, fileName : function(file) {
-            let name = file.path.split(file.base + ( (os.platform() === "win32") ? "\\" : "/") );
-            return name[1].replace(/[\\\/]?/, "");
-        }}),
-    dest("./"),
-],(err)=>  notify({message: err ||  "amd version task complete"}),);
+let cmMode = async ()=> src(codeMirror.get(
+    "mode",
+    [codeMirror.path.src.mode + "/meta.js"]
+))  .pipe(concat("modes.min.js"))
+    .pipe(dest(codeMirror.path.dist))
+    .pipe(uglify()) // {outSourceMap: true, sourceRoot: codeMirror.path.dist}
+    .pipe(dest(codeMirror.path.dist))
+    .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
+        let name = file.path.split(file.base + "\\");
+        return (name[1]?name[1]:name[0]).replace(/\\/g, "");
+    }}))
+    .pipe(dest(codeMirror.path.dist))
+    .pipe(notify({ message: "codemirror-mode task complete!" }));
 
-let cmMode = async ()=> pipeline([
-    src(codeMirror.get(
-        "mode",
-        [codeMirror.path.src.mode + "/meta.js"]
-    )),
-    concat("modes.min.js"),
-    dest(codeMirror.path.dist),
-    uglify(), // {outSourceMap: true, sourceRoot: codeMirror.path.dist}
-    dest(codeMirror.path.dist),
-    (header(headerMiniComment, {pkg : pkg, fileName : function(file) {
+let cmAddon = async ()=> src(codeMirror.get("addon"))
+    .pipe(concat("addons.min.js"))
+    .pipe(dest(codeMirror.path.dist))
+    .pipe(uglify()) //{outSourceMap: true, sourceRoot: codeMirror.path.dist}
+    .pipe(dest(codeMirror.path.dist))
+    .pipe(header(headerMiniComment, {pkg : pkg, fileName : function(file) {
             let name = file.path.split(file.base + "\\");
             return (name[1]?name[1]:name[0]).replace(/\\/g, "");
-        }})),
-    dest(codeMirror.path.dist),
-],(err)=>  notify({message: err ||  "codemirror-mode task complete!" }));
+        }}))
+    .pipe(dest(codeMirror.path.dist))
+    .pipe(notify({ message: "codemirror-addon.js task complete" }));
 
-
-let cmAddon = async ()=> pipeline([
-    src(codeMirror.get("addon")),
-    concat("addons.min.js"),
-    dest(codeMirror.path.dist),
-    uglify(), //{outSourceMap: true, sourceRoot: codeMirror.path.dist}
-    dest(codeMirror.path.dist),
-    (header(headerMiniComment, {pkg : pkg, fileName : function(file) {
-            let name = file.path.split(file.base + "\\");
-            return (name[1]?name[1]:name[0]).replace(/\\/g, "");
-        }})),
-    dest(codeMirror.path.dist),
-],(err)=>  notify({message: err ||  "codemirror-addon.js task complete" }));
 
 let cm = series(cmAddon,cmMode);
 exports.js = js;
@@ -342,6 +327,6 @@ gulp.task("jsdoc2md", function() {
             .pipe(rename(function(path) {
                 path.extname = ".md";
             }))
-            .pipe(gulp.dest("docs/markdown"));
+            .pipe(dest("docs/markdown"));
 });
 */

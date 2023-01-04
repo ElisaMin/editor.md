@@ -1,6 +1,6 @@
 {
   "name": "editor.md",
-  "version": "1.5.0-re",
+  "version": "1.5.1-re",
   "description": "Open source online markdown editor.",
   "directories": {
     "doc": "docs",
@@ -8,6 +8,8 @@
     "test": "tests"
   },
   "scripts": {
+    "dev": "gulp watch",
+    "build": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

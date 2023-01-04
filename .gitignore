@@ -8,6 +8,7 @@ research/
 test/
 backup/
 examples/uploads/**/*
+!.gitkeep
 *.bat
 *.sh
 .project
@@ -19,3 +20,4 @@ pnpm-lock.yaml
 package-lock.json
 *.min.js
 editormd.*js
+css/*

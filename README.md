@@ -22,7 +22,7 @@
 - Support AMD/CMD (Require.js & Sea.js) Module Loader, and Custom/define editor plugins;
 
 [README & Examples (English)](https://pandao.github.io/editor.md/en.html)
-  
+
 
 --------
 
@@ -93,7 +93,7 @@ If you using modular script loader:
 <link rel="stylesheet" href="editormd/css/editormd.preview.css" />
 <div id="test-markdown-view">
     <!-- Server-side output Markdown text -->
-    <textarea style="display:none;">### Hello world!</textarea>             
+    <textarea style="display:none;">### Hello world!</textarea>
 </div>
 <script src="jquery.min.js"></script>
 <script src="editormd/editormd.js"></script>
@@ -107,7 +107,7 @@ If you using modular script loader:
             // htmlDecode : "style,script,iframe",  // Note: If enabled, you should filter some dangerous HTML tags for website security.
         });
     });
-</script>    
+</script>
 ```
 
 > See the full example: [http://editor.md.ipandao.com/examples/html-preview-markdown-to-html.html](http://editor.md.ipandao.com/examples/html-preview-markdown-to-html.html)
@@ -169,7 +169,7 @@ Editor.md options and default values:
     fontSize             : "13px",
     saveHTMLToTextarea   : false,          // If enable, Editor will create a <textarea name="{editor-id}-html-code"> tag save HTML code for form post to server-side.
     disabledKeyMaps      : [],
-    
+
     onload               : function() {},
     onresize             : function() {},
     onchange             : function() {},
@@ -181,10 +181,13 @@ Editor.md options and default values:
     onfullscreenExit     : function() {},
     onscroll             : function() {},
     onpreviewscroll      : function() {},
-    
+
     imageUpload          : false,          // Enable/disable upload
     imageFormats         : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
     imageUploadURL       : "",             // Upload url
+    imageUploadFields    : "",             // append upload form fields for CRSF etc. Server-side receives the POST parameters. v1.5.1+
+    imageUploadCallback  : function() {},  // set image upload finish (success or failure) callback handler v1.5.1+
+    imageUploadCallbackName : '__Editor_md_ImageUploadCallback', // upload callback name for cross-domain upload v1.5.1+
     crossDomainUpload    : false,          // Enable/disable Cross-domain upload
     uploadCallbackURL    : "",             // Cross-domain upload callback url
 
@@ -194,7 +197,7 @@ Editor.md options and default values:
     tocDropdown          : false,          // Enable/disable Table Of Contents dropdown menu
     tocContainer         : "",             // Custom Table Of Contents Container Selector
     tocStartLevel        : 1,              // Said from H1 to create ToC
-    htmlDecode           : false,          // Open the HTML tag identification 
+    htmlDecode           : false,          // Open the HTML tag identification, If set String value expression : tagName,tagName,...|attrName,attrName,...
     pageBreak            : true,           // Enable parse page break [========]
     atLink               : true,           // for @link
     emailLink            : true,           // for email address auto link
@@ -202,6 +205,12 @@ Editor.md options and default values:
     emoji                : false,          // :emoji: , Support Github emoji, Twitter Emoji (Twemoji);
                                            // Support FontAwesome icon emoji :fa-xxx: > Using fontAwesome icon web fonts;
                                            // Support Editor.md logo icon emoji :editormd-logo: :editormd-logo-1x: > 1~8x;
+    emojiCategories      : [               // Custom Emoji categories
+        "github-emoji",
+        "twemoji",
+        "font-awesome",
+        "editormd-logo"
+    ],
     tex                  : false,          // TeX(LaTeX), based on KaTeX
     flowChart            : false,          // flowChart.js only support IE9+
     sequenceDiagram      : false,          // sequenceDiagram.js only support IE9+
@@ -224,7 +233,7 @@ Editor.md options and default values:
         "ucwords"        : "<a href=\"javascript:;\" title=\"ucwords\" unselectable=\"on\"><i class=\"fa\" name=\"ucwords\" style=\"font-size:20px;margin-top: -3px;\">Aa</i></a>"
     },
     toolbarIconTexts     : {},
-    
+
     lang : {  // Language data, you can custom your language.
         name        : "zh-cn",
         description : "开源在线Markdown编辑器<br/>Open source online Markdown editor.",
