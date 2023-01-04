@@ -197,24 +197,25 @@ let head = (b) => {
             .replace(b ? "\\" : /[\\\/]?/ , "")
     };
 };
-async function scssTask(fileName, pathOrNull) {
-    let path = pathOrNull || "scss/";
-    let distPath = "css";
-    return sass({
-        file:path+fileName+".sass",
+async function scssTask(fileName, path) {
+    let file = (path || "scss/")+fileName;
+    let output = ()=> dest("css");
+    return src(file+".scss")
+    .pipe(sass({
+        outFile:file+".sass",
         outputStyle:"expanded",
         sourceMap:false,
         noCache: true,
-    })
-    .pipe(dest(distPath))
+    }))
+    .pipe(output())
     .pipe(header(headerComment, head(true)))
-    .pipe(dest(distPath))
+    .pipe(output())
     .pipe(rename({ suffix: ".min" }))
-    .pipe(dest(distPath))
+    .pipe(output())
     .pipe(minifycss())
-    .pipe(dest(distPath))
+    .pipe(output())
     .pipe(header(headerMiniComment, head(true)))
-    .pipe(dest(distPath))
+    .pipe(output())
     .pipe(notify({ message: fileName + ".scss task completed!" }));
 }
 let scssMain = async ()=> await scssTask("editormd");
