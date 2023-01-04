@@ -1,6 +1,6 @@
 {
   "name": "editor.md",
-  "version": "1.5.0",
+  "version": "1.5.0-re",
   "description": "Open source online markdown editor.",
   "directories": {
     "doc": "docs",
@@ -39,6 +39,7 @@
     "gulp-sass": "^5.1.0",
     "gulp-uglify": "^3.0.2",
     "jshint": "^2.13.6",
+    "readable-stream": "^4.3.0",
     "sass": "^1.57.1"
   }
 }
